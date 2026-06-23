@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 이해하기 — 마인드셋과 실무 활용</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --black: #1a1a1a;
+    --dark: #2d2d2d;
+    --mid: #6b6b6b;
+    --light: #b0b0b0;
+    --pale: #e8e8e8;
+    --bg: #f5f5f5;
+    --white: #ffffff;
+    --accent: #404040;
+  }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--black);
+    color: var(--black);
+    overflow: hidden;
+  }
+
+  .deck {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 80px 120px;
+    background: var(--bg);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    overflow-y: auto;
+  }
+
+  .slide * {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  .slide.active {
+    display: flex;
+    opacity: 1;
+  }
+
+  .slide.dark {
+    background: var(--black);
+    color: var(--bg);
+  }
+
+  .slide.dark .label { color: var(--light); }
+  .slide.dark .sub { color: var(--light); }
+  .slide.dark .divider { background: var(--mid); }
+
+  /* Typography */
+  .label {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin-bottom: 24px;
+  }
+
+  h1 {
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1.3;
+    letter-spacing: -1px;
+    max-width: 900px;
+    text-align: center;
+  }
+
+  h2 {
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: -0.5px;
+    max-width: 850px;
+    text-align: center;
+  }
+
+  h3 {
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1.5;
+    max-width: 750px;
+    text-align: center;
+    color: var(--dark);
+  }
+
+  .sub {
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--mid);
+    max-width: 700px;
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .big-number {
+    font-size: 120px;
+    font-weight: 900;
+    color: var(--black);
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+
+  .dark .big-number { color: var(--bg); }
+
+  .divider {
+    width: 60px;
+    height: 3px;
+    background: var(--black);
+    margin: 28px 0;
+  }
+
+  /* Layout helpers */
+  .left-align {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .left-align h1,
+  .left-align h2,
+  .left-align h3,
+  .left-align .sub { text-align: left; }
+
+  .content-block {
+    max-width: 850px;
+    width: 100%;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    max-width: 1200px;
+    width: 100%;
+    align-items: start;
+  }
+
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 40px;
+    max-width: 1300px;
+    width: 100%;
+    align-items: start;
+  }
+
+  .col h3 {
+    text-align: left;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--black);
+  }
+
+  .col p, .col li {
+    text-align: left;
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--dark);
+  }
+
+  .dark .col h3 { color: var(--bg); }
+  .dark .col p, .dark .col li { color: var(--light); }
+
+  /* List styles */
+  ul {
+    list-style: none;
+    text-align: left;
+    max-width: 800px;
+  }
+
+  ul li {
+    font-size: 20px;
+    line-height: 1.6;
+    padding: 8px 0;
+    color: var(--dark);
+  }
+
+  ul li::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--mid);
+    border-radius: 50%;
+    margin-right: 14px;
+    vertical-align: middle;
+  }
+
+  /* Table */
+  .comparison-table {
+    width: 100%;
+    max-width: 1200px;
+    border-collapse: collapse;
+    margin-top: 24px;
+  }
+
+  .comparison-table th {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    color: var(--mid);
+    text-align: left;
+    padding: 12px 20px;
+    border-bottom: 2px solid var(--black);
+  }
+
+  .comparison-table td {
+    font-size: 18px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--pale);
+    color: var(--dark);
+    line-height: 1.5;
+  }
+
+  .dark .comparison-table th { color: var(--light); border-bottom-color: var(--light); }
+  .dark .comparison-table td { color: var(--light); border-bottom-color: var(--accent); }
+
+  /* Quote */
+  .quote {
+    font-size: 32px;
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.6;
+    max-width: 800px;
+    text-align: center;
+    color: var(--dark);
+  }
+
+  .dark .quote { color: var(--pale); }
+
+  .quote-attr {
+    font-size: 16px;
+    color: var(--mid);
+    margin-top: 20px;
+    font-style: normal;
+  }
+
+  /* Highlight box */
+  .highlight-box {
+    background: var(--white);
+    border-left: 4px solid var(--black);
+    padding: 28px 36px;
+    margin-top: 24px;
+    max-width: 800px;
+  }
+
+  .highlight-box p {
+    font-size: 20px;
+    line-height: 1.6;
+    color: var(--dark);
+  }
+
+  .dark .highlight-box {
+    background: var(--dark);
+    border-left-color: var(--light);
+  }
+
+  .dark .highlight-box p { color: var(--light); }
+
+  /* Tag */
+  .tag {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    padding: 6px 14px;
+    border: 1px solid var(--mid);
+    border-radius: 20px;
+    color: var(--mid);
+    margin: 4px;
+  }
+
+  .tag.filled {
+    background: var(--black);
+    color: var(--bg);
+    border-color: var(--black);
+  }
+
+  .dark .tag { border-color: var(--light); color: var(--light); }
+  .dark .tag.filled { background: var(--bg); color: var(--black); }
+
+  /* Step list */
+  .step-list {
+    max-width: 800px;
+    width: 100%;
+  }
+
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--pale);
+  }
+
+  .dark .step { border-bottom-color: var(--accent); }
+
+  .step-num {
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--light);
+    min-width: 50px;
+  }
+
+  .step-content h3 {
+    text-align: left;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .step-content p {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--mid);
+  }
+
+  /* Part divider slide */
+  .part-num {
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    color: var(--light);
+    margin-bottom: 16px;
+  }
+
+  /* Progress bar */
+  .progress {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--mid);
+    transition: width 0.3s ease;
+    z-index: 100;
+  }
+
+  /* Slide counter */
+  .counter {
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    font-size: 13px;
+    color: var(--light);
+    z-index: 100;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  /* Nav hint */
+  .nav-hint {
+    position: fixed;
+    bottom: 20px;
+    left: 30px;
+    font-size: 12px;
+    color: var(--light);
+    z-index: 100;
+    opacity: 0.5;
+  }
+
+  /* Animated entrance */
+  .slide.active .fade-up {
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  .fade-up { opacity: 0; transform: translateY(20px); }
+  .delay-1 { animation-delay: 0.1s !important; }
+  .delay-2 { animation-delay: 0.25s !important; }
+  .delay-3 { animation-delay: 0.4s !important; }
+  .delay-4 { animation-delay: 0.55s !important; }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck">
+
+  <!-- ==================== TITLE ==================== -->
+  <div class="slide dark active" data-part="title">
+    <div class="label fade-up">2026.06.26 금 14:00-15:30</div>
+    <h1 class="fade-up delay-1">AI 이해하기</h1>
+    <div class="sub fade-up delay-2" style="font-size: 24px; color: var(--pale); margin-top: 12px;">마인드셋과 실무 활용</div>
+    <div class="divider fade-up delay-3"></div>
+    <div class="sub fade-up delay-4" style="font-size: 16px;">하나 파워 온 혁신기업 인턴십 &middot; AI 활용 교육 1회차</div>
+  </div>
+
+  <!-- ==================== 강의 구조 ==================== -->
+  <div class="slide" data-part="1">
+    <div class="label fade-up">AX로 가는 두 번의 만남</div>
+    <div class="two-col fade-up delay-1">
+      <div class="col" style="padding: 40px; background: var(--black); color: var(--bg);">
+        <div style="font-size: 13px; letter-spacing: 2px; color: var(--light); margin-bottom: 16px;">1회차 &mdash; 6/26</div>
+        <h3 style="color: var(--bg); font-size: 26px; font-weight: 700;">AI 이해하기</h3>
+        <p style="color: var(--light); margin-top: 12px;">마인드셋 전환 + 실무 활용 + 잘 쓰기</p>
+        <div style="margin-top: 20px;">
+          <span class="tag" style="border-color: var(--light); color: var(--light);">개인</span>
+          <span class="tag" style="border-color: var(--light); color: var(--light);">업무 생산성</span>
+        </div>
+      </div>
+      <div class="col" style="padding: 40px; border: 1px solid var(--pale);">
+        <div style="font-size: 13px; letter-spacing: 2px; color: var(--light); margin-bottom: 16px;">2회차 &mdash; 7/24</div>
+        <h3 style="font-size: 26px; font-weight: 700;">AI 확장하기</h3>
+        <p style="color: var(--mid); margin-top: 12px;">업무 설계 + 팀 차원 활용 + 임팩트 확장</p>
+        <div style="margin-top: 20px;">
+          <span class="tag">조직</span>
+          <span class="tag">임팩트 창출</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 오늘의 목표 ==================== -->
+  <div class="slide" data-part="1">
+    <div class="label fade-up">오늘의 목표</div>
+    <h2 class="fade-up delay-1">AI에 대한 두려움을 내려놓고,<br>실무에서 바로 써보고,<br>"잘" 쓰는 감각까지 잡기</h2>
+  </div>
+
+  <!-- ==================== 메타 소개 ==================== -->
+  <div class="slide dark" data-part="1">
+    <h2 class="fade-up" style="font-size: 36px; font-weight: 400;">지금 보고 계신<br>이 강의 자료도</h2>
+    <h1 class="fade-up delay-1" style="margin-top: 16px;">AI와 함께<br>만들었습니다</h1>
+  </div>
+
+  <!-- ==================== 강사 소개 ==================== -->
+  <div class="slide left-align" data-part="1">
+    <div class="label fade-up">강사 소개</div>
+    <h2 class="fade-up delay-1" style="font-size: 32px; max-width: 800px;">프롬프트를 뭐라 치는지도 몰랐던<br>비개발자의 우당탕탕 AI 표류기</h2>
+    <div class="divider fade-up delay-2"></div>
+    <div class="fade-up delay-3" style="max-width: 700px;">
+      <p style="font-size: 18px; line-height: 1.8; color: var(--dark);">
+        박해주 &middot; 카카오임팩트 에듀임팩트팀<br>
+        <span style="font-size: 15px; color: var(--mid);">전 플랜엠 임팩트 컨설턴트</span><br><br>
+        영상 편집, 문서 작성, 일일 업무 관리 같은 개인 업무부터
+        Google Workspace와 AI를 연결해 팀과 함께 일하는 방식을 바꿔보는 것까지.
+        현장에서 직접 부딪혀가며 AX를 체화하고 있습니다.
+      </p>
+      <p style="font-size: 18px; line-height: 1.8; color: var(--mid); margin-top: 16px;">
+        전문가가 아니라 먼저 써본 사람으로서,<br>
+        솔직하게 나누고 함께 고민하는 시간이 되었으면 합니다.
+      </p>
+    </div>
+  </div>
+
+  <!-- ==================== PART 1 DIVIDER ==================== -->
+  <div class="slide dark" data-part="1">
+    <div class="part-num fade-up">PART 1</div>
+    <h1 class="fade-up delay-1">마인드셋 전환</h1>
+    <div class="sub fade-up delay-2">아묻따에서 별다묻까지</div>
+  </div>
+
+  <!-- ==================== 뼈문과 타임라인 ==================== -->
+  <div class="slide" data-part="1">
+    <div class="label fade-up">뼈문과 타임라인</div>
+    <div class="three-col fade-up delay-1">
+      <div class="col" style="padding: 32px; border: 1px solid var(--pale); text-align: left;">
+        <div style="font-size: 13px; letter-spacing: 2px; color: var(--light); margin-bottom: 12px;">THEN</div>
+        <h3 style="font-size: 28px; font-weight: 700;">2024.07</h3>
+        <p style="font-weight: 600; margin-top: 8px;">Claude와의 첫 만남</p>
+        <p style="color: var(--mid); margin-top: 8px; font-size: 15px;">프롬프트를 뭐라고 입력해야 할지조차 모르던 시절.</p>
+        <div style="width: 100%; height: 140px; margin-top: 16px; border-radius: 6px; overflow: hidden;">
+          <img src="assets/showtell/img-002.png" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div style="margin-top: 16px; font-size: 13px; letter-spacing: 1px; color: var(--light);">STAGE 0 · 문외한</div>
+      </div>
+      <div class="col" style="padding: 32px; border: 1px solid var(--pale); text-align: left;">
+        <div style="font-size: 13px; letter-spacing: 2px; color: var(--light); margin-bottom: 12px;">RECENTLY</div>
+        <h3 style="font-size: 28px; font-weight: 700;">2026.03</h3>
+        <p style="font-weight: 600; margin-top: 8px;">AX 본격 시작</p>
+        <p style="color: var(--mid); margin-top: 8px; font-size: 15px;">두려움과 의구심을 누르며 일단 얼레벌레 사용 시작.</p>
+        <div style="width: 100%; height: 140px; margin-top: 16px; border-radius: 6px; overflow: hidden;">
+          <img src="assets/showtell/img-006.png" style="width: 100%; height: 100%; object-fit: cover; object-position: center 40%;">
+        </div>
+        <div style="margin-top: 16px; font-size: 13px; letter-spacing: 1px; color: var(--light);">STAGE 1 · 엄지발가락 담그기</div>
+      </div>
+      <div class="col" style="padding: 32px; background: var(--black); color: var(--bg); text-align: left;">
+        <div style="font-size: 13px; letter-spacing: 2px; color: var(--light); margin-bottom: 12px;">NOW</div>
+        <h3 style="font-size: 28px; font-weight: 700; color: var(--bg);">2026.06</h3>
+        <p style="font-weight: 600; margin-top: 8px; color: var(--bg);">출근부터 퇴근까지 함께</p>
+        <p style="color: var(--light); margin-top: 8px; font-size: 15px;">매일 AI와 함께 업무 수행. 이 강의 자료도 함께 제작.</p>
+        <div style="width: 100%; height: 140px; margin-top: 16px; border-radius: 6px; overflow: hidden;">
+          <img src="assets/showtell/img-004.png" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div style="margin-top: 16px; font-size: 13px; letter-spacing: 1px; color: var(--accent);">STAGE 2 · 아나두</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 아묻따 + 별다묻 ==================== -->
+  <div class="slide dark" data-part="1">
+    <div class="label fade-up">마인드셋</div>
+    <div class="two-col fade-up delay-1" style="gap: 32px;">
+      <div class="col" style="padding: 40px; border: 1px solid var(--light); text-align: left;">
+        <div style="font-size: 13px; letter-spacing: 2px; color: var(--light); margin-bottom: 12px;">KEYWORD 01</div>
+        <h2 style="font-size: 48px; font-weight: 800; color: var(--bg);">아묻따</h2>
+        <p style="color: var(--light); margin-top: 12px;">아무것도 묻지도 따지지도 않고<br>— 일단 물어보기에서 시작된 여정.</p>
+      </div>
+      <div class="col" style="padding: 40px; border: 1px solid var(--light); text-align: left;">
+        <div style="font-size: 13px; letter-spacing: 2px; color: var(--light); margin-bottom: 12px;">KEYWORD 02</div>
+        <h2 style="font-size: 48px; font-weight: 800; color: var(--bg);">별다묻</h2>
+        <p style="color: var(--light); margin-top: 12px;">별걸 다 묻고 별걸 다 시키게 되는 단계<br>— 소소한 성공이 쌓이면 자연스레 찾아오는 다음 모습.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 영상 ==================== -->
+  <div class="slide dark" data-part="1">
+    <div class="label fade-up" style="display: flex; align-items: center; gap: 16px;">영상으로 보기 <a href="https://www.instagram.com/reel/DYjl6UESsZo/?igsh=ajU3M3prbWJhamRq" target="_blank" style="font-size: 12px; color: var(--light); text-decoration: none; letter-spacing: 1px;">Instagram ↗</a></div>
+    <video class="fade-up delay-1" src="assets/showtell/intro_video.mp4" controls style="max-height: 70vh; border-radius: 8px;"></video>
+  </div>
+
+  <!-- ==================== 마인드셋 핵심 ==================== -->
+  <div class="slide dark" data-part="1">
+    <div class="label fade-up">핵심 메시지</div>
+    <h2 class="fade-up delay-1" style="font-size: 34px; font-weight: 400;">일단 두려움을 내려놓고</h2>
+    <h1 class="fade-up delay-2" style="margin-top: 20px;">먼저 많이 써보기</h1>
+  </div>
+
+  <!-- ==================== 설문 전환 ==================== -->
+  <div class="slide" data-part="1">
+    <h2 class="fade-up" style="font-weight: 400; font-size: 32px; color: var(--mid);">제 이야기를 했으니</h2>
+    <h1 class="fade-up delay-1" style="margin-top: 12px;">여러분은<br>어떠세요?</h1>
+  </div>
+
+  <!-- ==================== 설문 결과 ==================== -->
+  <div class="slide left-align" data-part="1">
+    <div class="label fade-up">참여자 사전 설문</div>
+    <div class="three-col fade-up delay-1" style="text-align: left;">
+      <div class="col" style="padding: 32px; border: 1px solid var(--pale);">
+        <div style="font-size: 13px; letter-spacing: 2px; color: var(--mid); margin-bottom: 16px;">활용 수준</div>
+        <div class="big-number" style="font-size: 64px;">83%+</div>
+        <p style="margin-top: 8px;">이미 AI를 활용 중</p>
+        <p style="color: var(--mid); margin-top: 8px; font-size: 15px;">"어느 정도 활용 가능" 46%<br>"기본 기능 사용" 38%</p>
+      </div>
+      <div class="col" style="padding: 32px; border: 1px solid var(--pale);">
+        <div style="font-size: 13px; letter-spacing: 2px; color: var(--mid); margin-bottom: 16px;">가장 어려운 점</div>
+        <div class="big-number" style="font-size: 64px;">27명</div>
+        <p style="margin-top: 8px;">답변 품질이 들쭉날쭉</p>
+        <p style="color: var(--mid); margin-top: 8px; font-size: 15px;">같은 질문도 결과가 다르고<br>어떻게 물어야 할지 모르겠다</p>
+      </div>
+      <div class="col" style="padding: 32px; border: 1px solid var(--pale);">
+        <div style="font-size: 13px; letter-spacing: 2px; color: var(--mid); margin-bottom: 16px;">배우고 싶은 주제</div>
+        <div class="big-number" style="font-size: 64px;">1위</div>
+        <p style="margin-top: 8px;">AI에게 잘 질문하는 법</p>
+        <p style="color: var(--mid); margin-top: 8px; font-size: 15px;">2위 보고서·기획서 작성<br>3위 영상 제작 AI</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 연구 데이터 비교 ==================== -->
+  <div class="slide" data-part="1">
+    <div class="label fade-up">여러분 설문 vs 비영리 현장 연구</div>
+    <table class="comparison-table fade-up delay-1">
+      <thead>
+        <tr>
+          <th style="width: 30%;">여러분 설문</th>
+          <th style="width: 35%;">비영리 현장 연구</th>
+          <th style="width: 35%;">같은 이야기</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>83%+ 활용 중</td>
+          <td>개인 사용률 92.7% <sup>1</sup></td>
+          <td><strong>다들 이미 쓰고 있다</strong></td>
+        </tr>
+        <tr>
+          <td>"답변 품질 들쭉날쭉"</td>
+          <td>교육/훈련 없음 35% <sup>2</sup></td>
+          <td><strong>혼자 더듬더듬 쓰고 있다</strong></td>
+        </tr>
+        <tr>
+          <td>"잘 물어보는 법" 1위</td>
+          <td>문서작성 75~91%, 자료조사 71~82% <sup>1,2</sup></td>
+          <td><strong>쓰긴 쓰는데 좁게 쓴다</strong></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="sub fade-up delay-2" style="font-size: 14px; margin-top: 24px;">
+      <sup>1</sup> 아름다운재단 기부문화연구소 (2026, N=302) &nbsp;&nbsp; <sup>2</sup> 다음세대재단 & 연세대 (2026, N=804)
+    </div>
+  </div>
+
+  <!-- ==================== 나도 좁게 시작했다 ==================== -->
+  <div class="slide dark" data-part="1">
+    <div class="label fade-up">저도 마찬가지였습니다</div>
+    <h2 class="fade-up delay-1" style="font-size: 32px; font-weight: 400; color: var(--light);">처음엔 하나에서 시작해서</h2>
+    <h1 class="fade-up delay-2" style="margin-top: 12px;">차근차근 넓혀왔습니다</h1>
+    <div class="three-col fade-up delay-3" style="margin-top: 40px;">
+      <div class="col" style="padding: 24px; border: 1px solid var(--mid); text-align: left; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 13px; letter-spacing: 2px; color: var(--light);">STEP 01 · 자료 분석</div>
+          <a href="https://youtu.be/B5VkGxdSglU?si=IAWyhVnvT8zDt393" target="_blank" style="font-size: 11px; color: var(--light); text-decoration: none;">영상 ↗</a>
+        </div>
+        <h3 style="font-size: 20px; font-weight: 700; color: var(--bg); margin-top: 12px;">데이터를 맡겨보기</h3>
+        <p style="color: var(--light); margin-top: 8px; font-size: 14px;">유튜브 댓글 779개 수집·분석<br>→ 보고서 작성</p>
+        <div style="width: 100%; height: 120px; margin-top: auto; padding-top: 12px; border-radius: 6px; overflow: hidden;">
+          <img src="assets/showtell/img-008.png" style="width: 100%; height: 100%; object-fit: cover; object-position: top;">
+        </div>
+      </div>
+      <div class="col" style="padding: 24px; border: 1px solid var(--mid); text-align: left; display: flex; flex-direction: column;">
+        <div style="font-size: 13px; letter-spacing: 2px; color: var(--light);">STEP 02 · 자료 제작</div>
+        <h3 style="font-size: 20px; font-weight: 700; color: var(--bg); margin-top: 12px;">직접 만들어보기</h3>
+        <p style="color: var(--light); margin-top: 8px; font-size: 14px;">리서치 시각화, 영상 편집,<br>발표장표까지 AI와 제작</p>
+        <div style="width: 100%; height: 120px; margin-top: auto; padding-top: 12px; border-radius: 6px; overflow: hidden;">
+          <img src="assets/showtell/img-011.png" style="width: 100%; height: 100%; object-fit: cover; object-position: top;">
+        </div>
+      </div>
+      <div class="col" style="padding: 24px; border: 1px solid var(--mid); text-align: left; display: flex; flex-direction: column;">
+        <div style="font-size: 13px; letter-spacing: 2px; color: var(--light);">STEP 03 · 스킬 → 시스템</div>
+        <h3 style="font-size: 20px; font-weight: 700; color: var(--bg); margin-top: 12px;">업무 흐름 자체를 바꾸기</h3>
+        <p style="color: var(--light); margin-top: 8px; font-size: 14px;">단일 스킬에서 원스톱<br>워크플로우로 확장</p>
+        <div style="width: 100%; height: 120px; margin-top: auto; padding-top: 12px; border-radius: 6px; overflow: hidden;">
+          <img src="assets/showtell/img-017.png" style="width: 100%; height: 100%; object-fit: cover; object-position: top;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 설문 → 강의 연결 ==================== -->
+  <div class="slide dark" data-part="1">
+    <h2 class="fade-up" style="font-weight: 400; font-size: 28px; color: var(--light);">여러분이 궁금하다고 하신</h2>
+    <h1 class="fade-up delay-1" style="margin-top: 12px; font-size: 44px;">잘 물어보는 법,<br>문서 작성 활용을</h1>
+    <h2 class="fade-up delay-2" style="font-weight: 400; font-size: 28px; color: var(--light); margin-top: 16px;">오늘 실제 사례로 풀어보겠습니다</h2>
+  </div>
+
+  <!-- ==================== PART 2 DIVIDER ==================== -->
+  <div class="slide dark" data-part="2">
+    <div class="part-num fade-up">PART 2</div>
+    <h1 class="fade-up delay-1">실무 활용</h1>
+    <div class="sub fade-up delay-2">AI로 일하는 감각 잡기</div>
+
+  </div>
+
+  <!-- ==================== 시연 소개: 회의록 ==================== -->
+  <div class="slide" data-part="2">
+    <div class="label fade-up">라이브 시연</div>
+    <h2 class="fade-up delay-1">같은 녹취록,<br>다른 결과</h2>
+    <div class="divider fade-up delay-2"></div>
+    <div class="two-col fade-up delay-3" style="margin-top: 12px;">
+      <div class="col" style="padding: 32px; border: 1px solid var(--pale);">
+        <h3 style="color: var(--mid);">A. 그냥 던진 것</h3>
+        <p>"이 녹취록 회의록으로 정리해줘"</p>
+      </div>
+      <div class="col" style="padding: 32px; background: var(--black); color: var(--bg);">
+        <h3 style="color: var(--bg);">B. 맥락을 준 것</h3>
+        <p style="color: var(--light);">구조 + 맥락 + 참석자 정보 + 원하는 형태</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 프롬프트 요소 ==================== -->
+  <div class="slide" data-part="2">
+    <div class="label fade-up">시연에서 짚을 것</div>
+    <h2 class="fade-up delay-1" style="font-size: 34px;">좋은 프롬프트의 요소</h2>
+    <div class="three-col fade-up delay-2" style="margin-top: 40px;">
+      <div class="col" style="text-align: center; padding: 32px; border: 1px solid var(--pale);">
+        <h3 style="text-align: center; font-size: 20px;">맥락</h3>
+        <p style="text-align: center; color: var(--mid);">배경, 목적, 상황을<br>함께 알려주기</p>
+      </div>
+      <div class="col" style="text-align: center; padding: 32px; border: 1px solid var(--pale);">
+        <h3 style="text-align: center; font-size: 20px;">구체적 요청</h3>
+        <p style="text-align: center; color: var(--mid);">무엇을, 어떻게<br>해달라는지 명확하게</p>
+      </div>
+      <div class="col" style="text-align: center; padding: 32px; border: 1px solid var(--pale);">
+        <h3 style="text-align: center; font-size: 20px;">원하는 형태</h3>
+        <p style="text-align: center; color: var(--mid);">구조, 톤, 분량,<br>결과물 형식 지정</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 라이브 시연 화면 ==================== -->
+  <div class="slide dark" data-part="2">
+    <div class="label fade-up" style="letter-spacing: 4px;">LIVE DEMO</div>
+    <h1 class="fade-up delay-1">회의록 시연</h1>
+    <div class="sub fade-up delay-2">같은 AI도 어떻게 시키느냐에 따라<br>결과가 완전히 달라집니다</div>
+  </div>
+
+  <!-- ==================== 사례 소개 타이틀 ==================== -->
+  <div class="slide" data-part="2">
+    <div class="label fade-up">사례 소개</div>
+    <h2 class="fade-up delay-1">AI로 해본 것들</h2>
+    <div class="sub fade-up delay-2">활용 폭은 생각보다 넓습니다</div>
+    <div style="margin-top: 32px;" class="fade-up delay-3">
+      <span class="tag filled">리서치</span>
+      <span class="tag filled">문서 작성</span>
+      <span class="tag filled">콘텐츠 제작</span>
+    </div>
+  </div>
+
+  <!-- ==================== 리서치 ==================== -->
+  <div class="slide left-align" data-part="2">
+    <div class="label fade-up">사례 1</div>
+    <h2 class="fade-up delay-1" style="font-size: 34px;">리서치</h2>
+    <div class="two-col fade-up delay-2" style="align-items: center; margin-top: 24px;">
+      <div class="col">
+        <p style="color: var(--dark);">주제 하나 던지면 자료를 찾아서 정리해주는 흐름</p>
+        <ul style="margin-top: 20px;">
+          <li>데이터 분석 &mdash; 40페이지 보고서도 핵심 추출</li>
+          <li>주제/URL 기반 심층 리서치</li>
+          <li>벤치마크 사례 조사, 비교 분석</li>
+        </ul>
+        <div class="highlight-box" style="margin-top: 20px;">
+          <p><strong>팩트체크 장치</strong>를 반드시 두세요<br>— 근거 요청, 출처 명시, 모르면 모른다고</p>
+        </div>
+      </div>
+      <div class="col" style="display: flex; justify-content: center;">
+        <div style="width: 100%; height: 240px; border: 1px solid var(--pale); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--light); font-size: 14px;">시연 화면</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 문서 작성 ==================== -->
+  <div class="slide left-align" data-part="2">
+    <div class="label fade-up">사례 2</div>
+    <h2 class="fade-up delay-1" style="font-size: 34px;">문서 작성</h2>
+    <div class="two-col fade-up delay-2" style="align-items: center; margin-top: 24px;">
+      <div class="col">
+        <p style="color: var(--dark);">초안 작성부터 톤 변환까지, 다양한 문서에 활용</p>
+        <ul style="margin-top: 20px;">
+          <li>회의록 &mdash; 녹취록을 구조화된 문서로</li>
+          <li>보고서 &middot; 기획서 &mdash; 뼈대 잡기 + 살 붙이기</li>
+          <li>인사말 &middot; 공문 &mdash; 초안 작성 + 톤 변환</li>
+        </ul>
+        <div class="highlight-box" style="margin-top: 20px;">
+          <p>원하는 결과물의 <strong>구조를 먼저 잡아주면</strong><br>AI가 채울 수 있는 것이 많아집니다</p>
+        </div>
+      </div>
+      <div class="col" style="display: flex; justify-content: center;">
+        <div style="width: 100%; height: 240px; border: 1px solid var(--pale); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--light); font-size: 14px;">시연 화면</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 콘텐츠 제작 ==================== -->
+  <div class="slide left-align" data-part="2">
+    <div class="label fade-up">사례 3</div>
+    <h2 class="fade-up delay-1" style="font-size: 34px;">콘텐츠 제작</h2>
+    <div class="two-col fade-up delay-2" style="align-items: center; margin-top: 24px;">
+      <div class="col">
+        <p style="color: var(--dark);">텍스트부터 디자인까지, AI와 대화하며 만들기</p>
+        <ul style="margin-top: 20px;">
+          <li>SNS 홍보 문구 &middot; 뉴스레터 톤 변환</li>
+          <li>카드뉴스 &middot; 포스터 &middot; 식순지 디자인</li>
+          <li>발표 자료 &mdash; 구성 잡기 + 초안 작성</li>
+        </ul>
+        <div class="highlight-box" style="margin-top: 20px;">
+          <p>원하는 결과물의 <strong>좋은 레퍼런스를 함께 던져주면</strong><br>AI의 출력 품질이 확 달라집니다</p>
+        </div>
+      </div>
+      <div class="col" style="display: flex; justify-content: center;">
+        <img src="assets/showtell/timetable.png" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 핵심 메시지 ==================== -->
+  <div class="slide dark" data-part="2">
+    <div class="label fade-up">핵심 메시지</div>
+    <h2 class="fade-up delay-1">AI는 초안을 만들고,<br>사람은 판단하고 수정한다</h2>
+    <div class="divider fade-up delay-2"></div>
+    <h3 class="fade-up delay-3" style="color: var(--light);">완벽한 한 방이 아니라,<br>대화하면서 고쳐가는 감각이 중요합니다</h3>
+  </div>
+
+  <!-- ==================== 따라하기 ==================== -->
+  <div class="slide dark" data-part="2">
+    <div class="label fade-up">따라하기</div>
+    <h2 class="fade-up delay-1">내 프롬프트<br>설계해보기</h2>
+    <div class="divider fade-up delay-2"></div>
+    <div class="step-list fade-up delay-3" style="margin-top: 12px;">
+      <div class="step" style="border-bottom-color: var(--accent);">
+        <div class="step-num" style="color: var(--mid);">1</div>
+        <div class="step-content">
+          <h3 style="color: var(--bg);">업무 하나 떠올리기</h3>
+          <p>이번 주에 해야 할 리서치, 문서, 콘텐츠 중 하나</p>
+        </div>
+      </div>
+      <div class="step" style="border-bottom-color: var(--accent);">
+        <div class="step-num" style="color: var(--mid);">2</div>
+        <div class="step-content">
+          <h3 style="color: var(--bg);">프롬프트 작성하기</h3>
+          <p>오늘 본 요소(맥락 + 구체적 요청 + 원하는 형태)를 의식하면서</p>
+        </div>
+      </div>
+      <div class="step" style="border-bottom: none;">
+        <div class="step-num" style="color: var(--mid);">3</div>
+        <div class="step-content">
+          <h3 style="color: var(--bg);">채팅에 공유하기</h3>
+          <p>서로의 프롬프트에서 힌트를 얻어가세요</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PART 3 DIVIDER ==================== -->
+  <div class="slide dark" data-part="3">
+    <div class="part-num fade-up">PART 3</div>
+    <h1 class="fade-up delay-1">잘 쓰기</h1>
+    <div class="sub fade-up delay-2">많이 써보는 것에서, 잘 쓰는 것으로</div>
+  </div>
+
+  <!-- ==================== 레슨런 1 ==================== -->
+  <div class="slide" data-part="3">
+    <div class="label fade-up">LESSON 1</div>
+    <h2 class="fade-up delay-1" style="font-size: 40px;">딸깍이 아니다</h2>
+    <h3 class="fade-up delay-2" style="color: var(--mid); margin-top: 8px;">입력의 질이 출력의 질을 결정합니다</h3>
+    <div class="three-col fade-up delay-3" style="margin-top: 40px;">
+      <div class="col" style="text-align: center; padding: 32px; border: 1px solid var(--pale);">
+        <h3 style="text-align: center; font-size: 20px;">맥락</h3>
+        <p style="text-align: center; color: var(--mid);">같은 녹취록도<br>어떻게 시키느냐에 따라<br>결과가 완전히 달랐죠</p>
+      </div>
+      <div class="col" style="text-align: center; padding: 32px; border: 1px solid var(--pale);">
+        <h3 style="text-align: center; font-size: 20px;">구체성</h3>
+        <p style="text-align: center; color: var(--mid);">원하는 구조, 배경, 톤까지<br>구체적으로 줄수록<br>결과가 좋아진다</p>
+      </div>
+      <div class="col" style="text-align: center; padding: 32px; border: 1px solid var(--pale);">
+        <h3 style="text-align: center; font-size: 20px;">레퍼런스</h3>
+        <p style="text-align: center; color: var(--mid);">좋은 예시를 함께 주면<br>출력 품질이<br>확 달라진다</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 레슨런 2 ==================== -->
+  <div class="slide" data-part="3">
+    <div class="label fade-up">LESSON 2</div>
+    <h2 class="fade-up delay-1" style="font-size: 40px;">AI 출력은 항상 초안이다</h2>
+    <h3 class="fade-up delay-2" style="color: var(--mid); margin-top: 8px;">검증과 책임은 사람의 몫이다</h3>
+    <div class="three-col fade-up delay-3" style="margin-top: 40px; align-items: stretch;">
+      <div class="col" style="text-align: center; padding: 32px; border: 1px solid var(--pale); display: flex; flex-direction: column; justify-content: center;">
+        <h3 style="text-align: center; font-size: 20px;">근거 요구</h3>
+        <p style="text-align: center; color: var(--mid);">"출처를<br>함께 알려줘"</p>
+      </div>
+      <div class="col" style="text-align: center; padding: 32px; border: 1px solid var(--pale); display: flex; flex-direction: column; justify-content: center;">
+        <h3 style="text-align: center; font-size: 20px;">소스 지정</h3>
+        <p style="text-align: center; color: var(--mid);">"공식 보고서에서만<br>데이터를 활용해"</p>
+      </div>
+      <div class="col" style="text-align: center; padding: 32px; border: 1px solid var(--pale); display: flex; flex-direction: column; justify-content: center;">
+        <h3 style="text-align: center; font-size: 20px;">불확실 제외</h3>
+        <p style="text-align: center; color: var(--mid);">"확실하지 않은 내용은<br>빼줘"</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 레슨런 3 ==================== -->
+  <div class="slide" data-part="3">
+    <div class="label fade-up">LESSON 3</div>
+    <h2 class="fade-up delay-1" style="font-size: 40px;">AI의 몫과 나의 몫을 나눈다</h2>
+    <h3 class="fade-up delay-2" style="color: var(--mid); margin-top: 8px;">역할 분리의 감각이 곧 AI와 일하는 감각입니다</h3>
+    <div class="three-col fade-up delay-3" style="margin-top: 40px;">
+      <div class="col" style="text-align: center; padding: 32px; border: 1px solid var(--pale);">
+        <h3 style="text-align: center; font-size: 20px;">AI에게</h3>
+        <p style="text-align: center; color: var(--mid);">초안, 정리,<br>반복 작업</p>
+      </div>
+      <div class="col" style="text-align: center; padding: 32px; border: 1px solid var(--pale);">
+        <h3 style="text-align: center; font-size: 20px;">나에게</h3>
+        <p style="text-align: center; color: var(--mid);">판단, 맥락,<br>방향 설정</p>
+      </div>
+      <div class="col" style="text-align: center; padding: 32px; border: 1px solid var(--pale);">
+        <h3 style="text-align: center; font-size: 20px;">함께</h3>
+        <p style="text-align: center; color: var(--mid);">역할을 나눌수록<br>일의 효율이 올라간다</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 핵심 메시지 ==================== -->
+  <div class="slide dark" data-part="3">
+    <h2 class="fade-up" style="font-weight: 400; font-size: 30px; color: var(--light);">"나 없어도 되는 거 아냐?"</h2>
+    <h1 class="fade-up delay-1" style="margin-top: 20px; font-size: 44px;">두려워서 안 쓰는 것도,<br>무비판적으로 다 맡기는 것도 아닌</h1>
+    <div class="divider fade-up delay-2"></div>
+    <h3 class="fade-up delay-3" style="color: var(--light); font-size: 22px;">맥락, 판단, 방향, 사람 사이의 뉘앙스는<br>AI 영역 밖에 있습니다</h3>
+  </div>
+
+  <!-- ==================== AX 7원칙 ==================== -->
+  <div class="slide" data-part="3" style="padding: 40px;">
+    <div class="label fade-up">카카오임팩트 AX 7원칙</div>
+    <img class="fade-up delay-1" src="assets/showtell/kakaoimpact_ax.jpeg" style="max-height: 75vh; max-width: 90vw; object-fit: contain; border-radius: 8px;">
+  </div>
+
+  <!-- ==================== 클로징 메시지 ==================== -->
+  <div class="slide dark" data-part="3">
+    <div class="label fade-up">클로징</div>
+    <div class="quote fade-up delay-1" style="font-size: 26px;">
+      "비영리 종사자의 업무의미감(사명)은<br>AI 활용과 유의미한 상관이 없었다"
+    </div>
+    <div class="quote-attr fade-up delay-2">아름다운재단 기부문화연구소 (2026, N=302)</div>
+    <div class="divider fade-up delay-3"></div>
+    <h1 class="fade-up delay-4" style="margin-top: 16px; font-size: 40px;">여러분이 하는 일의 본질은<br>달라지지 않습니다</h1>
+    <h3 class="fade-up delay-4" style="color: var(--light); font-size: 18px; margin-top: 16px;">수혜자와의 관계, 현장 판단, 사람의 온기는 AI 영역 밖에 있습니다</h3>
+  </div>
+
+  <!-- ==================== Q&A ==================== -->
+  <div class="slide" data-part="3">
+    <h1 class="fade-up" style="font-size: 48px;">Q&A</h1>
+    <div class="sub fade-up delay-1">궁금한 것, 나누고 싶은 것</div>
+  </div>
+
+  <!-- ==================== 과제 ==================== -->
+  <div class="slide left-align" data-part="3">
+    <div class="label fade-up">과제</div>
+    <h2 class="fade-up delay-1" style="font-size: 36px;">아까 쓴 프롬프트,<br>직접 돌려보기</h2>
+    <div class="divider fade-up delay-2"></div>
+    <div class="content-block fade-up delay-3">
+      <p style="font-size: 18px; color: var(--mid); margin-bottom: 20px;">어떤 AI 도구든 상관없습니다 &mdash; 결과를 간단히 기록해주세요</p>
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h3>프롬프트 실행</h3>
+            <p>오늘 설계한 프롬프트로 AI에게 시켜보기</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h3>결과는 어땠나</h3>
+            <p>쓸만했는지, 아쉬웠는지, 놀라웠는지</p>
+          </div>
+        </div>
+        <div class="step" style="border-bottom: none;">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h3>사람이 고친 부분</h3>
+            <p>AI 결과물에서 내가 수정하거나 보완한 것</p>
+          </div>
+        </div>
+      </div>
+      <div class="highlight-box" style="margin-top: 24px;">
+        <p>잘 된 것보다 <strong>안 된 것, 우당탕탕한 것이 더 좋은 공유 소재</strong>입니다!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 2회차 예고 ==================== -->
+  <div class="slide dark" data-part="end">
+    <div class="label fade-up">2회차 예고 &mdash; 7/24</div>
+    <h2 class="fade-up delay-1" style="font-size: 34px;">AI 적용하기</h2>
+    <div class="sub fade-up delay-2" style="font-size: 20px; color: var(--pale);">업무 설계와 임팩트 관점</div>
+    <div class="divider fade-up delay-3"></div>
+    <div class="fade-up delay-4" style="margin-top: 8px;">
+      <span class="tag" style="border-color: var(--light); color: var(--light);">업무 설계</span>
+      <span class="tag" style="border-color: var(--light); color: var(--light);">팀 차원 활용</span>
+      <span class="tag" style="border-color: var(--light); color: var(--light);">임팩트 확장</span>
+    </div>
+    <h3 class="fade-up delay-4" style="color: var(--light); margin-top: 32px; font-size: 20px;">다음 시간에 만나요. 감사합니다!</h3>
+    <div class="fade-up delay-4" style="margin-top: 24px; font-size: 14px; color: var(--mid);">
+      <a href="mailto:haven.park@kakaoimpact.org" style="color: var(--light); text-decoration: none;">haven.park@kakaoimpact.org</a>
+      &nbsp;&middot;&nbsp;
+      <a href="https://www.linkedin.com/in/haeju-park-a09689145/" target="_blank" style="color: var(--light); text-decoration: none;">LinkedIn ↗</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- Progress & Counter -->
+<div class="progress" id="progress"></div>
+<div class="counter" id="counter"></div>
+<div class="nav-hint" id="navHint">← → 키로 이동</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+  const total = slides.length;
+
+  function show(idx) {
+    slides.forEach(s => s.classList.remove('active'));
+    slides[idx].classList.add('active');
+    document.getElementById('counter').textContent = `${idx + 1} / ${total}`;
+    document.getElementById('progress').style.width = `${((idx + 1) / total) * 100}%`;
+    // hide nav hint after first navigation
+    if (idx > 0) document.getElementById('navHint').style.display = 'none';
+  }
+
+  function next() { if (current < total - 1) { current++; show(current); } }
+  function prev() { if (current > 0) { current--; show(current); } }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+    if (e.key === 'Home') { e.preventDefault(); current = 0; show(current); }
+    if (e.key === 'End') { e.preventDefault(); current = total - 1; show(current); }
+  });
+
+  // Touch support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) { diff > 0 ? next() : prev(); }
+  });
+
+  // Click navigation (left third = prev, right two thirds = next)
+  document.addEventListener('click', e => {
+    if (e.clientX < window.innerWidth / 3) prev();
+    else next();
+  });
+
+  show(0);
+</script>
+
+</body>
+</html>
